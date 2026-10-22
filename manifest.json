@@ -2146,7 +2146,7 @@
   },
   "files": {
     "app.R": {
-      "checksum": "aef6038d5f7caf7e78261527b8c658f8"
+      "checksum": "336a58fb75016c5c304acc58fc70ee2b"
     },
     "examples/phenomenology/assignment.xlsx": {
       "checksum": "141f43f20f42724965c28f79e4e66ff5"
@@ -2173,7 +2173,7 @@
       "checksum": "bb64e104c9a749c725d862393b947151"
     },
     "README.md": {
-      "checksum": "ad1f8d6b1801a85cf72b640135226609"
+      "checksum": "ecafd18b2e8dfecb08bc5b9a4945585a"
     },
     "report/epa_report.Rmd": {
       "checksum": "c321c167a12a29ca8e24abccf152a0bf"

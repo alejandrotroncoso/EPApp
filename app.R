@@ -237,7 +237,7 @@ ui <- page_navbar(
     )
   ),
 
-  nav_panel("Help", card(includeMarkdown("README.md")))
+  nav_panel("Help", card(HTML(commonmark::markdown_html(paste(readLines("README.md", encoding = "UTF-8"), collapse = "\n"), extensions = TRUE))))
 )
 
 # -----------------------------------------------------------------------------

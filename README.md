@@ -1,7 +1,7 @@
 # EPApp
 **Experimental Phenomenological Analysis app**
 
-EPApp implements Stage 5 of Experimental Phenomenological Analysis (EPA): the triangulation of disagreements and the assessment of inter-analyst agreement. Researchers define the study protocol once (codebook hierarchy, temporal phases, experiential structures and coding dyads) and then upload the ATLAS.ti exports of each researcher to obtain an interactive HTML report. The report has wide triangulation tables for each dyad and agreement indices for each analytic level. Agreement is computed on the independent codings before discussion. The agreed elements form a phenomenologically stabilized dataset, which the app describes with percentages and radar charts. EPApp runs online without installing anything, or locally in R so that data never leave the researcher's computer.
+EPApp implements Stage 5 of Experimental Phenomenological Analysis (EPA): the triangulation of disagreements and the assessment of inter-analyst agreement. Researchers define the study protocol once (codebook hierarchy, temporal phases, experiential structures and coding groups: dyads or triads) and then upload the ATLAS.ti exports of each researcher to obtain an interactive HTML report. The report has wide triangulation tables for each coding group and agreement indices for each analytic level. Agreement is computed on the independent codings before discussion. The agreed elements form a phenomenologically stabilized dataset, which the app describes with percentages and radar charts. EPApp runs online without installing anything, or locally in R so that data never leave the researcher's computer.
 
 ### Workflow
 
