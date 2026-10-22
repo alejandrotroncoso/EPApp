@@ -1,0 +1,186 @@
+{
+  "project": "Compassion phenomenology (example)",
+  "created": "2026-10-22 11:44",
+  "codebook": ["0. Global Structure of Experience", "0.1  Relational Disengagement", "0.2 Persistent Angst", "0.3 Anguish Anchoring with Other-Oriented Support", "0.4 Compassionate Support for suffering", "1. Temporal Phases", "1.0 Preparation", "1.1 Connection with the suffering", "1.2 Sensing the climax of anguish", "1.3 Navigating the anguish", "1.3.1 Compasive Intention", "1.3.2 Disconnection", "1.3.3 Navigating with Persitent Angst", "1.4 Post-Interacción", "2. Bodily Resonance", "2.1 Affective Quality", "2.1.1 Relief", "2.1.2 Anguish", "2.1.3 Discomfort", "2.1.4 Nervousness", "2.2 Body feeling", "2.2.1 Chest-Throat pressure", "2.2.2 Watery eyes", "2.2.3 Sadness feeling in the face", "2.2.4 Open Heart feeling", "2.2.5 a hollow feeling in the abdomen", "2.3 General body tone", "2.3.1 Tension", "2.3.2 Heaviness", "2.3.3 Agitation", "2.3.4 Movement feeling", "2.3.5 Calm", "2.4 Intensity", "2.4.1 High", "2.4.2 Media", "2.4.3 Low", "2.4.4 Increasing", "2.4.5 Decreasing Intensity", "2.4.6 Intensity in Maintenance", "3. Relational Presence", "3.0 Quality", "3.0.1 Absence", "3.0.2 Intermittent Presence", "3.0.3 Full Presence", "3.1 Attentional focus", "3.1.2 Body language of the other", "3.1.3 Unidirectional towards itself", "3.1.4 Bidirectional", "3.1.5  Unidirectional towards each other's context", "3.2 Internal dialogue", "3.2.1 Disconnected", "3.2.2 Connected", "3.3 Imagination", "3.3.2 About the other", "3.3.3 About himself", "3.3.4 On the context", "4. Dis/engagement Acts", "4.1 Types", "4.1.1 Disengagement Act", "4.1.2 Sustain the connection", "4.1.3 Reactive Support", "4.1.4 Compassionate balanced Support", "4.2 Modality", "4.2.1 Supportive Touch", "4.2.2 Self-protective act", "4.2.3 Help", "4.2.4 Mantain the focus", "4.2.5 Breathing", "4.2.6 No harm", "4.2.7 Focus Shift", "5. Interpersonal Space", "5.1 Comfortable", "5.2 Close", "5.3 Distant", "5.4 Uncomfortable", "5.5 Open", "5.6 Warm"],
+  "match_by": "number",
+  "diachronic": true,
+  "phases": ["1.1 Connection with the suffering", "1.2 Sensing the climax of anguish", "1.3.1 Compasive Intention", "1.3.2 Disconnection", "1.3.3 Navigating with Persitent Angst"],
+  "unphased": "ignore",
+  "structure_family": "0",
+  "excluded": [],
+  "collapse_at": [],
+  "max_depth": 3,
+  "id_regex": "[0-9]+",
+  "drop_documents": "memo|test",
+  "kappa_threshold": 0.8,
+  "assignment": [
+    {
+      "Interview": "S1",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S2",
+      "Dyad": "Coder 2-Coder 3"
+    },
+    {
+      "Interview": "S3",
+      "Dyad": "Coder 1-Coder 3"
+    },
+    {
+      "Interview": "S4",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S5",
+      "Dyad": "Coder 2-Coder 3"
+    },
+    {
+      "Interview": "S6",
+      "Dyad": "Coder 1-Coder 3"
+    },
+    {
+      "Interview": "S7",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S8",
+      "Dyad": "Coder 2-Coder 3"
+    },
+    {
+      "Interview": "S9",
+      "Dyad": "Coder 1-Coder 3"
+    },
+    {
+      "Interview": "S10",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S11",
+      "Dyad": "Coder 2-Coder 3"
+    },
+    {
+      "Interview": "S12",
+      "Dyad": "Coder 1-Coder 3"
+    },
+    {
+      "Interview": "S13",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S14",
+      "Dyad": "Coder 2-Coder 3"
+    },
+    {
+      "Interview": "S15",
+      "Dyad": "Coder 1-Coder 3"
+    },
+    {
+      "Interview": "S16",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S17",
+      "Dyad": "Coder 2-Coder 3"
+    },
+    {
+      "Interview": "S18",
+      "Dyad": "Coder 1-Coder 3"
+    },
+    {
+      "Interview": "S19",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S20",
+      "Dyad": "Coder 2-Coder 3"
+    },
+    {
+      "Interview": "S21",
+      "Dyad": "Coder 1-Coder 3"
+    },
+    {
+      "Interview": "S22",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S23",
+      "Dyad": "Coder 2-Coder 3"
+    },
+    {
+      "Interview": "S24",
+      "Dyad": "Coder 1-Coder 3"
+    },
+    {
+      "Interview": "S25",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S26",
+      "Dyad": "Coder 2-Coder 3"
+    },
+    {
+      "Interview": "S27",
+      "Dyad": "Coder 1-Coder 3"
+    },
+    {
+      "Interview": "S28",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S29",
+      "Dyad": "Coder 2-Coder 3"
+    },
+    {
+      "Interview": "S30",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S31",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S32",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S33",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S34",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S35",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S36",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S37",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S38",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S39",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S40",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S42",
+      "Dyad": "Coder 1-Coder 2"
+    },
+    {
+      "Interview": "S43",
+      "Dyad": "Coder 1-Coder 2"
+    }
+  ]
+}

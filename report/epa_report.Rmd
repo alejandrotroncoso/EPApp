@@ -1,0 +1,335 @@
+---
+title: "Triangulation of disagreements and inter-analyst agreement"
+subtitle: "`r params$subtitle`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: yes
+      smooth_scroll: no
+    number_sections: yes
+    code_folding: hide
+    highlight: tango
+    theme: paper
+params:
+  protocol: "protocol.json"
+  files: !r list()
+  subtitle: "Stage 5 (Analytic Cycle II) of Experimental Phenomenological Analysis"
+---
+
+```{css, echo=FALSE}
+.main-container { max-width: 100% !important; padding-left: 2%; padding-right: 2%; }
+@media (min-width: 992px) {
+  .main-container > .row > .col-md-3 { width: 17%; }
+  .main-container > .row > .col-md-9 { width: 83%; }
+  .tocify { width: 15.5% !important; font-size: 0.9em; }
+}
+details { margin: 0.5em 0 1.5em 0; }
+summary { cursor: pointer; color: #2196F3; }
+.warning-box { background: #fff4e5; border-left: 4px solid #f0a020; padding: 0.6em 1em; margin: 1em 0; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+source("epa_core.R")
+library(reactable)
+
+protocol <- load_protocol(params$protocol)
+files    <- unlist(params$files)
+study    <- build_study(protocol, files)
+threshold <- protocol$kappa_threshold %||% 0.80
+
+n_int   <- n_distinct(study$design$Key)
+dyads   <- sort(unique(study$design$Dyad))   # coding groups (dyads or triads)
+has_triads <- any(study$design$GroupSize > 2)
+group_word <- if (has_triads) "coding group" else "dyad"
+units   <- study$units
+
+# Shared table helpers -------------------------------------------------------
+num_col <- function(d) colDef(format = colFormat(digits = d), na = "—", minWidth = 75)
+indices_table <- function(data, kappa_label = if (has_triads) "κ (Cohen / Fleiss)" else "Cohen's κ") {
+  if ("Dyad" %in% names(data)) data <- rename(data, `Coding group` = Dyad)
+  txt <- names(data)[vapply(data, is.character, logical(1))]
+  reactable(
+    data, pagination = FALSE, highlight = TRUE, striped = TRUE, compact = TRUE,
+    sortable = TRUE, defaultColDef = colDef(minWidth = 70, na = "—"),
+    columns = c(
+      setNames(lapply(txt, function(x) colDef(minWidth = 170)), txt),
+      list(`Agreement %` = num_col(1), PSA = num_col(2), `Gwet AC1` = num_col(2),
+           Disagreements = colDef(minWidth = 105),
+           `Coded by any` = colDef(minWidth = 90, na = "—"),
+           `Kripp. alpha` = colDef(name = "Krippendorff's α", format = colFormat(digits = 2),
+                                   na = "—", minWidth = 95),
+           Kappa = colDef(name = kappa_label, format = colFormat(digits = 2), na = "—",
+                          minWidth = 80,
+                          style = function(v) if (!is.na(v) && v < threshold)
+                            list(color = "#b2182b", fontWeight = "bold")))
+    )
+  )
+}
+triangulation_table <- function(data, coders) {
+  # R1, R2, R3... take the names of the researchers of the group.
+  rc <- paste0("R", seq_along(coders))
+  data <- data %>%
+    mutate(`Coded by` = paste0(`Coded by`, "/", GroupSize)) %>%
+    select(Interview, `Temporal phase` = Phase, Category, all_of(rc), `Coded by`, Agreement,
+           `Higher-order category` = Higher_order, Dimension) %>%
+    rename_with(~ coders[match(.x, rc)], all_of(rc))
+  if (length(coders) == 2) data$`Coded by` <- NULL
+  if (!is_diachronic(protocol)) data$`Temporal phase` <- NULL
+  reactable(
+    data, filterable = TRUE, searchable = TRUE, pagination = FALSE, highlight = TRUE,
+    striped = TRUE, compact = TRUE, resizable = TRUE, wrap = FALSE, bordered = TRUE,
+    height = 700,
+    columns = c(
+      list(Interview = colDef(minWidth = 100, sticky = "left"),
+           `Temporal phase` = colDef(minWidth = 250),
+           Category = colDef(minWidth = 330),
+           Agreement = colDef(minWidth = 100, align = "center",
+                              style = function(v) if (v == "No")
+                                list(color = "#b2182b", fontWeight = "bold", background = "#fbeaea")),
+           `Coded by` = colDef(minWidth = 90, align = "center"),
+           `Higher-order category` = colDef(minWidth = 220),
+           Dimension = colDef(minWidth = 200)),
+      setNames(lapply(coders, function(x) colDef(minWidth = 90, align = "center")), coders))[
+      intersect(c("Interview", "Temporal phase", "Category", "Coded by", "Agreement",
+                  "Higher-order category", "Dimension", coders), names(data))],
+    theme = reactableTheme(headerStyle = list(background = "#f2f2f2"))
+  )
+}
+formative_summary <- function(dyad) {
+  study$triangulation %>%
+    filter(Dyad == dyad) %>%
+    group_by(Interview, Key) %>%
+    summarise(`Coded elements` = n(), Agreements = sum(Agreement == "Yes"),
+              Disagreements = sum(Agreement == "No"),
+              `Agreement %` = round(100 * Agreements / `Coded elements`, 1), .groups = "drop") %>%
+    arrange(suppressWarnings(as.numeric(Key)), Key) %>%
+    select(-Key)
+}
+```
+
+# Overview
+
+**Project:** `r protocol$project`. **Report generated:** `r format(Sys.time(), "%Y-%m-%d %H:%M")`.
+
+This report carries out **Stage 5 (Interjudge Agreement Analysis)** of the Analytic Cycle II. In Analytic Cycle I, the working structure was constructed and intersubjectively stabilized; in Analytic Cycle II, it guided the independent, participant-by-participant analysis of the corpus in ATLAS.ti (Stage 4), with each interview analyzed independently by a dyad or a triad of researchers. From the researchers' exports and the study protocol, the report:
+
+* **Step 5.1.** builds the coding matrices according to the diachronic-synchronic organization of the working structure (temporal phases, synchronic categories and experiential structures);
+* **Step 5.2.** lists, for each coding group (dyad or triad), every coded element and whether all its researchers agreed on it, so that disagreements can be traced back to ATLAS.ti and discussed (formative use of agreement);
+* **Outcome (i).** reports inter-analyst agreement indices by analytic level, computed on the independent codings before discussion (summative use);
+* **Outcome (ii).** summarizes the phenomenologically stabilized dataset (agreed elements only).
+
+The design includes `r n_int` interviews coded by `r length(dyads)` coding groups (`r paste(dyads, collapse = ", ")`).
+
+```{r warnings, results='asis'}
+msgs <- character(0)
+if (nrow(study$missing_codings)) {
+  miss <- study$missing_codings %>% group_by(Coder) %>%
+    summarise(ids = paste(Interview, collapse = ", "), .groups = "drop")
+  msgs <- c(msgs, paste0("**No codings found** for researcher ", miss$Coder, " in: ", miss$ids, "."))
+}
+for (ck in study$checks) {
+  if (length(ck$missing)) msgs <- c(msgs, paste0("**", ck$file, "** does not contain ", length(ck$missing),
+                                                 " code(s) of the codebook: ", paste(head(ck$missing, 8), collapse = "; "),
+                                                 if (length(ck$missing) > 8) "; ..." else "", "."))
+  if (length(ck$unmatched)) msgs <- c(msgs, paste0("**", ck$file, "** contains code(s) not in the codebook (ignored): ",
+                                                   paste(head(ck$unmatched, 8), collapse = "; "), "."))
+}
+if (length(msgs)) cat('<div class="warning-box">', paste0("<p>", msgs, "</p>", collapse = ""), "</div>")
+```
+
+# Step 5.1. Protocol and coding matrices
+
+## Working structure
+
+The hierarchy of the working structure is read from the numeric prefix of each code. The protocol defines which codes are temporal phases, which family contains the experiential structures, which codes are excluded, and at which level codes are analyzed (codes below that level are counted as their ancestor). Codes that have sub-categories are not analyzed by themselves.
+
+* **Diachronic axis:** `r if (is_diachronic(protocol)) paste0("yes. Temporal phases: ", paste(protocol$phases, collapse = "; "), ". Quotations without a phase are ", if (identical(protocol$unphased, "include")) "analyzed as an additional pseudo-phase (*No phase identified*)" else "not analyzed", ".") else "no. Each interview is analyzed as a whole (synchronic analysis only); the temporal phase level is not reported."`
+* **Experiential structures:** `r if (nzchar(protocol$structure_family)) paste0("family ", protocol$structure_family, " (", sum(units$Type == "Structure"), " structures)") else "not analyzed"`.
+* **Synchronic categories analyzed:** `r sum(units$Type == "Category")` units in `r n_distinct(units$Higher_order[units$Type == "Category"])` higher-order categories.
+* **Maximum depth:** level `r protocol$max_depth`. `r if (length(protocol$collapse_at)) paste0("**Merged into their parent code:** descendants of ", paste(label_of(codebook_tree(protocol$codebook), protocol$collapse_at), collapse = "; "), ".") else ""`
+* **Excluded:** `r if (length(protocol$excluded)) paste(label_of(codebook_tree(protocol$codebook), protocol$excluded), collapse = "; ") else "none"`.
+
+<details><summary>Show the role of every code</summary>
+
+```{r roles}
+study$roles %>%
+  transmute(Code, Role, `Counted as` = coalesce(`Counted as`, "")) %>%
+  reactable(pagination = FALSE, compact = TRUE, striped = TRUE, searchable = TRUE, height = 450,
+            columns = list(Code = colDef(minWidth = 300), `Counted as` = colDef(minWidth = 250)))
+```
+
+</details>
+
+## Interviews and coding groups
+
+```{r design}
+study$design %>%
+  distinct(Dyad, Interview, Key) %>%
+  arrange(suppressWarnings(as.numeric(Key))) %>%
+  group_by(Dyad) %>%
+  summarise(Interviews = n(), IDs = paste(Interview, collapse = ", ")) %>%
+  reactable(compact = TRUE, striped = TRUE, columns = list(IDs = colDef(minWidth = 400)))
+```
+
+## Units of analysis
+
+```{r units-table, results='asis'}
+unit_rows <- c(
+  if (is_diachronic(protocol)) paste0("| Temporal phases | interview × phase | ", nrow(study$phase_matrix), " |"),
+  paste0("| Synchronic categories | ",
+         if (is_diachronic(protocol)) "interview × phase × category, within the phases identified by at least one researcher of the group"
+         else "interview × category (whole interview)", " | ", nrow(study$category_matrix), " |"),
+  if (!is.null(study$structure_matrix))
+    paste0("| Experiential structures | interview (nominal label) | ", nrow(study$structure_matrix), " |"))
+cat("| Level | Unit | Units |\n|---|---|---|\n", paste(unit_rows, collapse = "\n"), "\n", sep = "")
+```
+
+Joint absences are kept, because deciding that a category is absent is also a coding decision. Several quotations pointing to the same interview × phase × category count once.
+
+# Step 5.2. Triangulation of disagreements by coding group
+
+Each table lists every element coded by at least one researcher of the group (a dyad or a triad). An element is in agreement (*Yes*) when all the researchers of the group coded it; in triads, *Coded by* shows how many did (e.g. 2/3). Filter the *Agreement* column by "No" to locate each disagreement by interview, temporal phase and category, then review the quotation in ATLAS.ti and discuss it until consensus. Columns can be resized and filtered (type in the box under each header). The percentage of agreement is used here as a formative indicator, not as a reliability estimate.
+
+```{r triangulation-loop, results='asis'}
+fence <- strrep("`", 3)
+template <- c(
+  "## {{dyad}}", "",
+  "Interviews: {{ids}}.", "",
+  paste0(fence, "{r}"),
+  "triangulation_table(filter(study$triangulation, Dyad == '{{dyad}}'), strsplit('{{dyad}}', '-')[[1]])",
+  fence, "",
+  "<details><summary>Show the formative indicators by interview</summary>", "",
+  paste0(fence, "{r}"),
+  "formative_summary('{{dyad}}') %>% reactable(pagination = FALSE, compact = TRUE, striped = TRUE)",
+  fence, "", "</details>", "")
+for (dyad in dyads) {
+  ids <- study$design %>% filter(Dyad == dyad) %>% distinct(Interview, Key) %>%
+    arrange(suppressWarnings(as.numeric(Key))) %>% pull(Interview)
+  section <- knitr::knit_expand(text = template, dyad = dyad, ids = paste(ids, collapse = ", "))
+  cat(knitr::knit_child(text = section, envir = environment(), quiet = TRUE), sep = "\n")
+}
+```
+
+# Outcome (i): Inter-analyst agreement
+
+The indices are computed on the independent codings, before triangulation, and reported by analytic level.
+
+* **Agreement %**: proportion of units with the same decision (not corrected for chance; inflated by joint absences).
+* **PSA**: positive specific agreement, agreement on presences only (Cicchetti & Feinstein, 1990).
+* **Cohen's κ** for each dyad (two fixed researchers; Cohen, 1960) and **Fleiss' κ** for each triad and for the pooled data, since researchers vary across interviews (Fleiss, 1971). When dyads and triads are pooled, Fleiss' κ, AC1 and α are computed allowing for the missing ratings.
+* For more than two researchers, *Agreement %* is the proportion of units on which all of them made the same decision, and PSA generalizes specific positive agreement: of all the pairs of researchers that could confirm a presence, the proportion that did.
+* **Gwet's AC1**, less sensitive to low prevalence than kappa (Gwet, 2008), and **Krippendorff's α** (nominal; Krippendorff, 2004).
+
+κ values below `r threshold` (threshold set in the protocol) are shown in red. A dash means that the index is undefined (e.g., no variance) or not applicable.
+
+## Summary by analytic level
+
+**All interviews pooled** (Fleiss' κ):
+
+```{r sum-pooled}
+indices_table(level_summary(study), "Fleiss' κ")
+```
+
+**By coding group** (Cohen's κ for dyads, Fleiss' κ for triads):
+
+```{r sum-dyad}
+indices_table(level_summary(study, by_dyad = TRUE))
+```
+
+```{r phases-head, results='asis'}
+if (is_diachronic(protocol)) cat("## Temporal phases\n\nUnit: interview × phase. Agreement on whether each phase was identified in each interview.\n")
+```
+
+```{r phases}
+if (is_diachronic(protocol)) {
+  indices_by(study$phase_matrix, Phase, kappa = "fleiss") %>%
+    arrange(match(Phase, analysis_phases(protocol))) %>%
+    rename(`Temporal phase` = Phase) %>%
+    indices_table("Fleiss' κ")
+}
+```
+
+## Synchronic categories
+
+**By dimension:**
+
+```{r dims}
+indices_by(study$category_matrix, Dimension, kappa = "fleiss") %>% indices_table("Fleiss' κ")
+```
+
+**By higher-order category:**
+
+```{r higher}
+indices_by(study$category_matrix, Dimension, Higher_order, kappa = "fleiss") %>%
+  rename(`Higher-order category` = Higher_order) %>%
+  indices_table("Fleiss' κ")
+```
+
+<details><summary>Show every category</summary>
+
+```{r cats}
+indices_by(study$category_matrix, Dimension, Higher_order, Category, kappa = "fleiss") %>%
+  rename(`Higher-order category` = Higher_order) %>%
+  indices_table("Fleiss' κ")
+```
+
+</details>
+
+<details><summary>Show higher-order categories by coding group</summary>
+
+```{r higher-dyad}
+indices_by(study$category_matrix, Higher_order, Dyad) %>%
+  rename(`Higher-order category` = Higher_order) %>%
+  indices_table()
+```
+
+</details>
+
+```{r structures-head, results='asis'}
+if (!is.null(study$structure_matrix)) cat("## Experiential structures\n\nOne label per researcher and interview.\n")
+```
+
+```{r structures}
+if (!is.null(study$structure_matrix)) {
+  study$structure_matrix %>%
+    count(across(any_of(study$rcols)), name = "Interviews") %>%
+    rename_with(~ sub("^R", "Researcher ", .x), any_of(study$rcols)) %>%
+    reactable(compact = TRUE, striped = TRUE, pagination = FALSE)
+}
+```
+
+# Outcome (ii): The phenomenologically stabilized dataset
+
+```{r stabilized}
+stab <- stabilized_dataset(study)
+```
+
+The stabilized dataset contains the `r nrow(stab)` coded elements on which `r if (identical(protocol$consensus_rule, "majority")) "the majority of the researchers of the group (all of them, in dyads)" else "all the researchers of the group"` agreed, from `r n_distinct(stab$Interview)` interviews. It can be downloaded from the app (CSV) for the subsequent analyses.
+
+# Protocol and software
+
+<details><summary>Show the protocol used</summary>
+
+```{r protocol}
+cat(jsonlite::toJSON(protocol[setdiff(names(protocol), c("codebook", "assignment"))],
+                     auto_unbox = TRUE, pretty = TRUE))
+```
+
+</details>
+
+Computed in `r R.version.string` with irr (version `r packageVersion("irr")`) and irrCAC (version `r packageVersion("irrCAC")`).
+
+# References
+
+Cicchetti, D. V., & Feinstein, A. R. (1990). High agreement but low kappa: II. Resolving the paradoxes. *Journal of Clinical Epidemiology, 43*(6), 551–558.
+
+Cohen, J. (1960). A coefficient of agreement for nominal scales. *Educational and Psychological Measurement, 20*(1), 37–46.
+
+Fleiss, J. L. (1971). Measuring nominal scale agreement among many raters. *Psychological Bulletin, 76*(5), 378–382.
+
+Gwet, K. L. (2008). Computing inter-rater reliability and its variance in the presence of high agreement. *British Journal of Mathematical and Statistical Psychology, 61*(1), 29–48.
+
+Krippendorff, K. (2004). *Content analysis: An introduction to its methodology* (2nd ed.). Sage.

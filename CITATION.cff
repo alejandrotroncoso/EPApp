@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this app, please cite it as below."
+title: "EPApp: triangulation and inter-analyst agreement for Experimental Phenomenological Analysis"
+type: software
+license: MIT
+authors:
+  - family-names: Troncoso
+    given-names: Alejandro
+  - family-names: Zepeda
+    given-names: Antonia
+  - family-names: Martínez-Pernía
+    given-names: David
