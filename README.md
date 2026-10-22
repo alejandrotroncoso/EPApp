@@ -1,6 +1,8 @@
 # EPApp
 **Experimental Phenomenological Analysis app**
 
+**Use it online:** https://connect.posit.cloud/alejandrotroncoso/content/01a164df-0e50-853b-1726-c95d5f59e5be
+
 EPApp implements Stage 5 of Experimental Phenomenological Analysis (EPA): the triangulation of disagreements and the assessment of inter-analyst agreement. Researchers define the study protocol once (codebook hierarchy, temporal phases, experiential structures and coding groups: dyads or triads) and then upload the ATLAS.ti exports of each researcher to obtain an interactive HTML report. The report has wide triangulation tables for each coding group and agreement indices for each analytic level. Agreement is computed on the independent codings before discussion. The agreed elements form a phenomenologically stabilized dataset, which the app describes with percentages and radar charts. EPApp runs online without installing anything, or locally in R so that data never leave the researcher's computer.
 
 ### Workflow
@@ -51,7 +53,7 @@ Tables can be filtered by dimension and downloaded as CSV.
 
 ### How to use it
 
-**Online, without installing anything.** Open the app at **[ONLINE LINK]**. The example study can be explored with *Try the example study* (tab 1) and *Generate the example report* (tab 2).
+**Online, without installing anything.** Open the app at **[EPApp on Posit Connect Cloud](https://connect.posit.cloud/alejandrotroncoso/content/01a164df-0e50-853b-1726-c95d5f59e5be)**. The example study can be explored with *Try the example study* (tab 1) and *Generate the example report* (tab 2).
 
 **In R, directly from GitHub.** No download is needed; R runs the current version of the repository:
 
