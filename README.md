@@ -10,12 +10,12 @@ EPApp implements Stage 5 of Experimental Phenomenological Analysis (EPA): the tr
 **Step 1: Create the protocol (once per study).** In the *Protocol* tab:
 
 1. Upload the **codebook** (.xlsx). This can be the codebook exported from ATLAS.ti, with a column *Code*/*Código*, or the export of one researcher; in that case its code columns are used.
-2. Upload the **assignment of interviews to coding groups** (.xlsx). It needs two columns: the interview (*Entrevista*) and the group of researchers who coded it independently (*Dupla*). Write a dyad as `A-B` (e.g. `c1-c2`) and a triad as `A-B-C` (e.g. `c1-c2-c3`). Dyads and triads can be mixed in the same study. In a triad, an element is in agreement when all three researchers coded it, and the report shows how many did (e.g. 2/3). Under *Agreement* you can choose whether the stabilized dataset keeps only the elements coded by all the researchers of the group or those coded by most of them.
+2. Upload the **assignment of interviews to coding groups** (.xlsx). It needs two columns: the interview (*Entrevista*) and the group of researchers who coded it independently (*Dupla*). Write a dyad as `A-B` (e.g. `Coder 1-Coder 2`) and a triad as `A-B-C` (e.g. `Coder 1-Coder 2-Coder 3`). Dyads and triads can be mixed in the same study. In a triad, an element is in agreement when all three researchers coded it, and the report shows how many did (e.g. 2/3). Under *Agreement* you can choose whether the stabilized dataset keeps only the elements coded by all the researchers of the group or those coded by most of them.
 3. Define the **analytic levels**:
    * *Diachronic axis*: does the study have temporal phases? If not, each interview is analyzed as a whole (synchronic categories and experiential structures only). If it does, choose what to do with quotations that carry no phase code: ignore them, or analyze them as an extra phase called *No phase identified*.
    * *Temporal phases analyzed*: choose the code family of the phases. Its codes then appear as checkboxes; click to include or leave out each phase (e.g. leave out 1.0 Preparation or 1.4 Post-Interaction). Phases left out are not analyzed, and their codes are not treated as categories.
    * *Experiential structures*: the code family that contains the structures (e.g. `0.`). Each researcher's structure is compared at the interview level.
-   * *Deepest level*: codes below this level are counted as their ancestor (e.g. `3.1.1.2 Father` is counted as `3.1.1 Character related` with level 3).
+   * *Deepest level*: codes below this level are counted as their ancestor (e.g. with level 2, `2.3.5 Calm` is counted as `2.3 General body tone`).
    * *Merge sub-codes into*: to triangulate a category at a higher level of the hierarchy (e.g. `2.1 Affective Quality` instead of each affective quality).
    * *Exclude*: codes not analyzed, together with their sub-codes (e.g. `1.4 Post-Interaction`).
 4. Check the **hierarchy tree**. Each code shows its role (phase, unit of analysis, merged, structure, excluded…) and the unit it is counted as. Codes that keep sub-categories are not analyzed by themselves.
@@ -43,11 +43,11 @@ Tables can be filtered by dimension and downloaded as CSV.
 
 | File | Content |
 |---|---|
-| Codebook | One code per row (e.g. `2.3.5 Calm`). The hierarchy is read from the numeric prefix. Codes without a numeric prefix (e.g. `M1.8.1 Hug`) are ignored. |
+| Codebook | One code per row (e.g. `2.3.5 Calm`). The hierarchy is read from the numeric prefix. Codes without a numeric prefix are ignored. |
 | Assignment | `Entrevista \| Dupla` (or `Interview \| Dyad`). |
 | Exports | ATLAS.ti code-document export: one row per quotation, a *Document Name* column and one 0/1 column per code. |
 
-**Interview IDs.** The interview ID is taken from both the assignment and the *Document Name* of the exports with a regular expression. By default it is the first number, so `P0007`, `S7` and `sub-gutslei0007_ses-01` are the same interview.
+**Interview IDs.** The interview ID is taken from both the assignment and the *Document Name* of the exports with a regular expression. By default it is the first number, so `S7`, `s7` and `P007` are the same interview.
 
 **Matching codes.** By default, codes are matched by their number. If researchers named or numbered some codes differently but kept the same code tree, choose *Column position*.
 

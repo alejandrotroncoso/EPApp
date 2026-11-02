@@ -16,7 +16,7 @@
 # These functions can also be used without the app, e.g.:
 #   source("R/epa_core.R")
 #   epa_render_report("my_protocol.json",
-#                     files = c(c1 = "c1.xlsx", c2 = "c2.xlsx"),
+#                     files = c(`Coder 1` = "Coder1.xlsx", `Coder 2` = "Coder2.xlsx"),
 #                     output_file = "Triangulation.html")
 # =============================================================================
 
@@ -37,7 +37,7 @@ ATLAS_METADATA <- c("CASENO", "D", "Document Name", "MediaType", "quote_start",
 # -----------------------------------------------------------------------------
 
 # Numeric prefix of a code label: "2.3.5 Calm" -> "2.3.5"; "0. Structure" -> "0".
-# Labels without a numeric prefix (e.g. "M1.8.1 Hug") return NA.
+# Labels without a numeric prefix return NA.
 code_number <- function(label) {
   num <- str_match(trimws(label), "^([0-9]+(?:\\.[^.\\s]+)*)\\.?(?:\\s|$)")[, 2]
   num
@@ -174,7 +174,7 @@ read_assignment <- function(path) {
     mutate(Interview = trimws(Interview), Dyad = str_replace_all(trimws(Dyad), "\\s*-\\s*", "-"))
 }
 
-# Researchers named in the coding groups ("c1-c2-c3" -> c1, c2, c3).
+# Researchers named in the coding groups ("Coder 1-Coder 2" -> Coder 1, Coder 2).
 protocol_coders <- function(protocol) {
   if (is.null(protocol$assignment)) return(character(0))
   sort(unique(unlist(strsplit(protocol$assignment$Dyad, "-", fixed = TRUE))))
@@ -360,7 +360,7 @@ export_phases <- function(codes, protocol) {
 #   files: named character vector, names = researchers, values = paths.
 #
 # Each interview is coded by a group of researchers given in the assignment
-# ("c1-c2" for a dyad, "c1-c2-c3" for a triad). In the matrices, the decision
+# ("Coder 1-Coder 2" for a dyad, "Coder 1-Coder 2-Coder 3" for a triad). In the matrices, the decision
 # of each member of the group is stored in columns R1, R2, R3... (in the order
 # written in the assignment); members that a smaller group does not have are NA.
 build_study <- function(protocol, files) {

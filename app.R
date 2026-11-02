@@ -61,7 +61,7 @@ ui <- page_navbar(
         fileInput("assign", "Interviews and coding groups (.xlsx)", accept = ".xlsx",
                   placeholder = "Entrevista | Dupla"),
         helpText("Two columns: the interview ID and its coding group, written with the ",
-                 "researchers' names: 'A-B' for a dyad (e.g. c1-c2), 'A-B-C' for a triad. ",
+                 "researchers' names: 'A-B' for a dyad (e.g. Coder 1-Coder 2), 'A-B-C' for a triad. ",
                  "Dyads and triads can be mixed."),
         accordion(
           open = FALSE,
@@ -73,7 +73,7 @@ ui <- page_navbar(
                      "differently but kept the same code tree."),
             textInput("id_regex", "Interview ID rule (regex)", "[0-9]+"),
             helpText("Extracts the ID from the interview name and from ATLAS.ti ",
-                     "'Document Name'. Default: first number (P0007 = sub-gutslei0007 = 7)."),
+                     "'Document Name'. Default: first number (S7 = s7 = P007 = 7)."),
             textInput("drop_docs", "Ignore documents matching", "memo|test")
           ),
           accordion_panel(
@@ -172,7 +172,7 @@ ui <- page_navbar(
                   placeholder = "or use the one from tab 1"),
         uiOutput("prot_status"),
         fileInput("exports", "Researchers' exports (.xlsx)", multiple = TRUE, accept = ".xlsx",
-                  placeholder = "c1.xlsx, c2.xlsx, ..."),
+                  placeholder = "Coder1.xlsx, Coder2.xlsx, ..."),
         uiOutput("file_map"),
         actionButton("run", "Generate report", class = "btn-primary w-100", icon = icon("play")),
         br(), br(),
