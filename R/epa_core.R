@@ -635,3 +635,44 @@ plot_structure_radar <- function(tbl, categories, structures, ncol = 2) {
                      title = str_wrap(sub("^[0-9.]+\\s+", "", structures[i]), 28))
   }
 }
+
+# -----------------------------------------------------------------------------
+# 8. Study folder (local use)
+# -----------------------------------------------------------------------------
+# A study folder holds the protocol (.json) and one ATLAS.ti export (.xlsx)
+# per researcher. Other files (e.g. the codebook or the assignment) are ignored.
+
+# Researcher a file most likely belongs to, from its name ("" if none).
+guess_coder <- function(file_name, coders) {
+  norm <- function(x) tolower(gsub("[^A-Za-z0-9]", "", x))
+  f <- norm(tools::file_path_sans_ext(basename(file_name)))
+  hit <- coders[norm(coders) == f]
+  if (!length(hit)) hit <- coders[vapply(coders, function(cd) nzchar(norm(cd)) && grepl(norm(cd), f, fixed = TRUE), TRUE)]
+  if (length(hit)) hit[1] else ""
+}
+
+# Reads a study folder. Returns the protocol, its path, the exports assigned to
+# a researcher (name, datapath, coder) and the .xlsx files that were ignored.
+scan_study_folder <- function(dir) {
+  dir <- normalizePath(path.expand(dir), mustWork = FALSE)
+  if (!dir.exists(dir)) stop("The folder does not exist: ", dir)
+  files <- list.files(dir, full.names = TRUE)
+  files <- files[!startsWith(basename(files), "~$") & !startsWith(basename(files), ".")]
+  jsons <- files[grepl("\\.json$", files, ignore.case = TRUE)]
+  if (!length(jsons)) stop("No protocol (.json) found in the folder.")
+  if (length(jsons) > 1) {
+    named <- jsons[grepl("protocol", basename(jsons), ignore.case = TRUE)]
+    if (length(named)) jsons <- named
+    jsons <- jsons[order(file.mtime(jsons), decreasing = TRUE)]
+  }
+  protocol <- load_protocol(jsons[1])
+  coders <- protocol_coders(protocol)
+  xlsx <- files[grepl("\\.xlsx$", files, ignore.case = TRUE)]
+  guess <- vapply(xlsx, guess_coder, "", coders = coders, USE.NAMES = FALSE)
+  exports <- data.frame(name = basename(xlsx), datapath = xlsx, coder = guess, stringsAsFactors = FALSE)
+  list(dir = dir, protocol = protocol, protocol_path = jsons[1],
+       other_protocols = basename(jsons[-1]),
+       exports = exports[exports$coder != "", , drop = FALSE],
+       ignored = exports$name[exports$coder == ""],
+       missing = setdiff(coders, exports$coder))
+}

@@ -24,7 +24,7 @@ EPApp implements Stage 5 of Experimental Phenomenological Analysis (EPA): the tr
 **Step 2: Generate the report (every time new codings are available).** In the *Triangulation report* tab:
 
 1. Upload the protocol (.json), or use the one just created.
-2. Upload the exports of the researchers (one .xlsx per researcher, exported from ATLAS.ti with one column per code).
+2. Upload the exports of the researchers (one .xlsx per researcher, exported from ATLAS.ti with one column per code). The protocol can be selected together with the exports, in the same window.
 3. Check which researcher each file belongs to. The app guesses it from the file name.
 4. Click **Generate report**. You can then download the HTML report, the stabilized dataset (agreed elements only), the agreement indices and the full triangulation table.
 
@@ -71,6 +71,18 @@ shiny::runApp()
 ```
 
 Running it locally keeps all files on your own computer.
+
+**Study folder (local use only).** When the app runs on your computer, the *Triangulation report* tab also offers a *Study folder*. Keep the protocol and the exports of a study in one folder, for example a folder synced with OneDrive and shared by the team:
+
+```
+My_study/
+├── My_study_protocol.json
+├── Coder1.xlsx
+├── Coder2.xlsx
+└── Coder3.xlsx
+```
+
+Choose the folder with *Browse...* (or paste its path) and the app loads the protocol and assigns each export to its researcher from the file name. Other .xlsx files (e.g. the codebook) and Excel's temporary files are ignored. When the researchers export new codings, replace the files in the folder and click *Open folder* again. The app remembers the last folder used. Because the protocol does not store the path, each member of the team can open the same shared folder from their own computer.
 
 **Without the interface.** The report can also be generated from an R script:
 

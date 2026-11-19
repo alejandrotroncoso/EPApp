@@ -166,13 +166,16 @@ ui <- page_navbar(
     layout_sidebar(
       sidebar = sidebar(
         width = 370,
+        uiOutput("folder_ui"),
         actionButton("run_example", "Generate the example report", icon = icon("flask"),
                      class = "btn-outline-primary w-100 mb-3"),
         fileInput("prot_run", "Protocol (.json)", accept = ".json",
                   placeholder = "or use the one from tab 1"),
         uiOutput("prot_status"),
-        fileInput("exports", "Researchers' exports (.xlsx)", multiple = TRUE, accept = ".xlsx",
+        fileInput("exports", "Researchers' exports (.xlsx)", multiple = TRUE, accept = c(".xlsx", ".json"),
                   placeholder = "Coder1.xlsx, Coder2.xlsx, ..."),
+        div(class = "form-text mb-2", style = "margin-top:-12px",
+            "Tip: you can select the protocol (.json) together with the exports."),
         uiOutput("file_map"),
         actionButton("run", "Generate report", class = "btn-primary w-100", icon = icon("play")),
         br(), br(),
@@ -446,10 +449,94 @@ server <- function(input, output, session) {
   )
 
   # ---- Tab 2: report ---------------------------------------------------------
+  # The protocol and the exports of the report come from the last thing loaded:
+  # the protocol upload, the exports upload (which may include the protocol)
+  # or the study folder.
+  run <- reactiveValues(protocol = NULL, files = NULL, folder = NULL)
+
   run_protocol <- reactive({
-    if (!is.null(input$prot_run)) {
-      tryCatch(load_protocol(input$prot_run$datapath), error = function(e) NULL)
-    } else if (!is.null(rv$codebook)) protocol() else NULL
+    if (!is.null(run$protocol)) run$protocol
+    else if (!is.null(rv$codebook)) protocol() else NULL
+  })
+
+  read_protocol_safely <- function(path) tryCatch(load_protocol(path), error = function(e) {
+    showNotification(paste("The protocol could not be read:", conditionMessage(e)), type = "error"); NULL })
+
+  observeEvent(input$prot_run, run$protocol <- read_protocol_safely(input$prot_run$datapath))
+
+  observeEvent(input$exports, {
+    up <- input$exports
+    is_json <- grepl("\\.json$", up$name, ignore.case = TRUE)
+    if (any(is_json)) {
+      p <- read_protocol_safely(up$datapath[which(is_json)[1]])
+      if (!is.null(p)) run$protocol <- p
+    }
+    x <- up[!is_json, , drop = FALSE]
+    coders <- if (is.null(run_protocol())) character(0) else protocol_coders(run_protocol())
+    run$files <- data.frame(name = x$name, datapath = x$datapath,
+                            coder = vapply(x$name, guess_coder, "", coders = coders, USE.NAMES = FALSE),
+                            stringsAsFactors = FALSE)
+    run$folder <- NULL
+  })
+
+  # ---- Study folder (only when the app runs on the researcher's computer) ----
+  is_local <- reactive(session$clientData$url_hostname %in% c("127.0.0.1", "localhost", "::1", "0.0.0.0"))
+
+  last_folder_file <- file.path(tools::R_user_dir("EPApp", "config"), "last_folder.txt")
+  last_folder <- function() if (file.exists(last_folder_file)) readLines(last_folder_file, warn = FALSE)[1] else ""
+
+  output$folder_ui <- renderUI({
+    req(is_local())
+    div(class = "border rounded p-2 mb-3",
+        h6(icon("folder-open"), " Study folder"),
+        textInput("folder", NULL, value = last_folder(), placeholder = "Folder with the protocol and the exports"),
+        div(class = "d-flex gap-2",
+            actionButton("folder_browse", "Browse...", class = "btn-outline-secondary btn-sm"),
+            actionButton("folder_load", "Open folder", class = "btn-primary btn-sm", icon = icon("rotate"))),
+        div(class = "form-text",
+            "The folder holds the protocol (.json) and one .xlsx per researcher. ",
+            "After replacing the exports, click 'Open folder' again to reload them."),
+        uiOutput("folder_status"))
+  })
+
+  choose_folder <- function(start) {
+    if (requireNamespace("rstudioapi", quietly = TRUE) && rstudioapi::isAvailable())
+      return(rstudioapi::selectDirectory(path = if (dir.exists(start)) start else getwd()))
+    if (.Platform$OS.type == "windows") return(utils::choose.dir(default = start))
+    if (capabilities("tcltk")) return(tryCatch(tcltk::tk_choose.dir(default = start), error = function(e) NA))
+    NA
+  }
+
+  observeEvent(input$folder_browse, {
+    d <- choose_folder(path.expand(input$folder %||% ""))
+    if (is.null(d) || is.na(d) || !nzchar(d)) {
+      showNotification("No folder chosen. You can also paste its path in the box.", type = "warning")
+      return()
+    }
+    updateTextInput(session, "folder", value = d)
+    load_folder(d)
+  })
+  observeEvent(input$folder_load, load_folder(input$folder))
+
+  load_folder <- function(dir) {
+    s <- tryCatch(scan_study_folder(dir), error = function(e) {
+      showNotification(conditionMessage(e), type = "error", duration = 8); NULL })
+    if (is.null(s)) return()
+    run$protocol <- s$protocol
+    run$files <- s$exports
+    run$folder <- s
+    dir.create(dirname(last_folder_file), recursive = TRUE, showWarnings = FALSE)
+    try(writeLines(s$dir, last_folder_file), silent = TRUE)
+  }
+
+  output$folder_status <- renderUI({
+    s <- run$folder; req(s)
+    div(class = if (length(s$missing)) "alert alert-warning small mt-2 mb-0" else "alert alert-success small mt-2 mb-0",
+        strong("Loaded: "), basename(s$protocol_path), " + ", nrow(s$exports), " exports",
+        format(Sys.time(), " (%H:%M)"),
+        if (length(s$missing)) tagList(br(), strong("No file for: "), paste(s$missing, collapse = ", ")),
+        if (length(s$ignored)) tagList(br(), "Ignored: ", paste(s$ignored, collapse = ", ")),
+        if (length(s$other_protocols)) tagList(br(), "Other .json files not used: ", paste(s$other_protocols, collapse = ", ")))
   })
 
   output$prot_status <- renderUI({
@@ -465,17 +552,15 @@ server <- function(input, output, session) {
 
   # One selector per uploaded export: which researcher it belongs to.
   output$file_map <- renderUI({
-    req(input$exports, run_protocol())
+    x <- run$files
+    req(x, nrow(x) > 0, run_protocol())
     coders <- protocol_coders(run_protocol())
-    norm <- function(x) tolower(gsub("[^A-Za-z0-9]", "", x))
     tagList(
       h6("Researcher of each file"),
-      lapply(seq_len(nrow(input$exports)), function(i) {
-        f <- tools::file_path_sans_ext(input$exports$name[i])
-        guess <- coders[norm(coders) == norm(f)]
-        if (!length(guess)) guess <- coders[vapply(coders, function(cd) grepl(norm(cd), norm(f), fixed = TRUE), TRUE)]
-        selectInput(paste0("map_", i), input$exports$name[i],
-                    choices = c("(not used)" = "", coders), selected = guess[1] %||% "")
+      lapply(seq_len(nrow(x)), function(i) {
+        guess <- if (x$coder[i] %in% coders) x$coder[i] else guess_coder(x$name[i], coders)
+        selectInput(paste0("map_", i), x$name[i],
+                    choices = c("(not used)" = "", coders), selected = guess)
       })
     )
   })
@@ -485,18 +570,20 @@ server <- function(input, output, session) {
     if (is.null(p)) { showNotification("Load or create a protocol first.", type = "error"); return() }
     msgs <- check_protocol(p)
     if (length(msgs)) { showNotification("The protocol is incomplete (see the left panel).", type = "error"); return() }
-    req(input$exports)
-    map <- vapply(seq_len(nrow(input$exports)), function(i) input[[paste0("map_", i)]] %||% "", "")
+    x <- run$files
+    if (is.null(x) || !nrow(x)) { showNotification("Upload the exports or open the study folder.", type = "error"); return() }
+    map <- vapply(seq_len(nrow(x)), function(i) input[[paste0("map_", i)]] %||% "", "")
     if (any(duplicated(map[map != ""]))) {
       showNotification("Each researcher can only have one file.", type = "error"); return()
     }
     if (!any(map != "")) { showNotification("Assign each file to a researcher.", type = "error"); return() }
-    # Copies the uploads with their original names (used in the report messages).
+    # Copies the files with their original names (used in the report messages).
+    # Copying also protects synced folders (e.g. OneDrive) while the report runs.
     in_dir <- file.path(tempdir(), paste0("exports_", as.integer(Sys.time())))
     dir.create(in_dir)
     used <- which(map != "")
-    dest <- file.path(in_dir, input$exports$name[used])
-    file.copy(input$exports$datapath[used], dest)
+    dest <- file.path(in_dir, x$name[used])
+    file.copy(x$datapath[used], dest)
     files <- setNames(dest, map[used])
     generate_report(p, files)
   })
@@ -537,7 +624,7 @@ server <- function(input, output, session) {
   output$preview <- renderUI({
     if (is.null(rv$report))
       return(div(class = "text-muted p-4",
-                 "Upload the protocol and the exports, assign each file to a researcher and click 'Generate report'."))
+                 "Upload the protocol and the exports (or open the study folder), check the researcher of each file and click 'Generate report'."))
     tagList(
       a(href = rv$report$url, target = "_blank", icon("up-right-from-square"), " Open in a new tab"),
       tags$iframe(src = rv$report$url, style = "width:100%;height:80vh;border:none;")
